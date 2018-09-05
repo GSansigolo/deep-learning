@@ -1,11 +1,10 @@
 '''
-Created on Sep 04, 2018
+Created on Sep 05, 2018
 Author: @G_Sansigolo
 '''
 import tensorflow as tf
-#from models.official.mnist import dataset as mnist
-
 from tensorflow.examples.tutorials.mnist import input_data
+
 mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
 
 n_node_hl1 = 500
@@ -48,7 +47,8 @@ def neural_network_model(data):
 
 def train_neural_network(x):
     prediction = neural_network_model(x)
-    cost = tf.reduce_mean(-tf.reduce_sum(y*tf.log(prediction), reduction_indices=1))
+    cost = tf.reduce_mean( tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=y) )
+
     optimizer = tf.train.AdamOptimizer().minimize(cost)
 
     # cycles = feed foward + backprop
@@ -58,16 +58,17 @@ def train_neural_network(x):
         sess.run(tf.global_variables_initializer())
 
         for epoch in range(hm_epochs):
-            epoch_loss=0.
-
-            for _ in range(int(mnist.train.num_example/batch_size)):
-                epoch_x,epoch_y = mnist.train.next_batch(batch_size)
-                _, c = sess.run([optimizer,cost],feed_dict={x: epoch_x, y: epoch_y})
+            epoch_loss = 0
+            for _ in range(int(mnist.train.num_examples/batch_size)):
+                epoch_x, epoch_y = mnist.train.next_batch(batch_size)
+                _, c = sess.run([optimizer, cost], feed_dict={x: epoch_x, y: epoch_y})
                 epoch_loss += c
-            print('Epoch', epoch, 'completed out of', hm_epochs, 'loss:',epoch_loss)
 
-        correct= tf.equal(tf.argmax(prediction,1), tf.argmax(y,1))
-        accuracy= tf.reduce_mean(tf.cast(correct,'float'))
+            print('Epoch', epoch, 'completed out of',hm_epochs,'loss:',epoch_loss)
+
+        correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
+
+        accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
         print('Accuracy:',accuracy.eval({x:mnist.test.images, y:mnist.test.labels}))
 
 train_neural_network(x)
